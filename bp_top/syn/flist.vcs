@@ -109,6 +109,7 @@ $BASEJUMP_STL_DIR/bsg_misc/bsg_counter_clear_up_one_hot.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_counter_clock_downsample.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_counter_set_down.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_counter_set_en.v
+$BASEJUMP_STL_DIR/bsg_misc/bsg_counter_overflow_en.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_counter_up_down.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_counter_up_down_variable.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_crossbar_o_by_i.v
@@ -296,6 +297,7 @@ $BP_ME_DIR/src/v/network/bp_me_stream_pump_in.sv
 $BP_ME_DIR/src/v/network/bp_me_stream_pump_out.sv
 $BP_ME_DIR/src/v/network/bp_me_stream_fifo.sv
 $BP_ME_DIR/src/v/network/bp_me_stream_wraparound.sv
+$BP_ME_DIR/src/v/cce/bp_pce.sv
 ## TOP
 $BP_TOP_DIR/src/v/bp_nd_socket.sv
 $BP_TOP_DIR/src/v/bp_cacc_vdp.sv
@@ -321,6 +323,7 @@ $BP_TOP_DIR/src/v/bp_multicore.sv
 $BP_TOP_DIR/src/v/bp_unicore.sv
 $BP_TOP_DIR/src/v/bp_unicore_complex.sv
 $BP_TOP_DIR/src/v/bp_unicore_lite.sv
+$BP_TOP_DIR/src/v/bp_piton_top.sv
 $BP_TOP_DIR/src/v/bp_tile.sv
 $BP_TOP_DIR/src/v/bp_tile_node.sv
 
@@ -329,6 +332,10 @@ $BP_COMMON_DIR/src/v/bsg_async_noc_link.sv
 $BP_COMMON_DIR/src/v/bsg_deff_reset.v
 $BP_COMMON_DIR/src/v/bsg_dff_sync_read.v
 $BP_COMMON_DIR/src/v/bsg_rom_param.v
+<<<<<<< HEAD
 $BP_COMMON_DIR/src/v/bsg_crossbar_control_locking_o_by_i.v
 $BASEJUMP_STL_DIR/bsg_misc/bsg_dlatch.v
 
+=======
+$BP_ME_DIR/test/common/bp_cce_mmio_cfg_loader.sv
+>>>>>>> Adding OP-specific files

@@ -27,11 +27,6 @@ module bp_lce_cmd
    // number of LCE command data buffer elements
    , parameter cmd_data_buffer_els_p = cmd_buffer_els_p*(block_width_p/fill_width_p)
 
-   // clocking options
-   , parameter data_mem_invert_clk_p = 0
-   , parameter tag_mem_invert_clk_p = 0
-   , parameter stat_mem_invert_clk_p = 0
-
    // derived parameters
    , localparam lg_assoc_lp = `BSG_SAFE_CLOG2(assoc_p)
    , localparam lg_sets_lp = `BSG_SAFE_CLOG2(sets_p)
@@ -267,78 +262,65 @@ module bp_lce_cmd
   // sync done register - goes high when all sync command/acks complete
   logic sync_done_en, sync_done_li;
   bsg_dff_reset_en
-    #(.width_p(1))
-    sync_done_reg
-     (.clk_i(clk_i)
-      ,.reset_i(reset_i)
-      ,.en_i(sync_done_en)
-      ,.data_i(sync_done_li)
-      ,.data_o(sync_done_o)
-      );
+   #(.width_p(1))
+   sync_done_reg
+    (.clk_i(clk_i)
+     ,.reset_i(reset_i)
+     ,.en_i(sync_done_en)
+     ,.data_i(sync_done_li)
+     ,.data_o(sync_done_o)
+     );
 
   logic [block_width_p-1:0] dirty_data_r;
-  logic dirty_data_v_r;
   wire dirty_data_read = data_mem_pkt_yumi_i & (data_mem_pkt_cast_o.opcode == e_cache_data_mem_read);
-  wire data_mem_clk = (data_mem_invert_clk_p ? ~clk_i : clk_i);
   bsg_dff_sync_read
-   #(.width_p(block_width_p))
+   #(.width_p(block_width_p), .bypass_p(1))
    dirty_data_reg
-    (.clk_i(data_mem_clk)
+    (.clk_i(clk_i)
      ,.reset_i(reset_i)
 
      ,.data_i(data_mem_i)
      ,.v_n_i(dirty_data_read)
 
      ,.data_o(dirty_data_r)
-     ,.v_o(dirty_data_v_r)
-     ,.yumi_i(dirty_data_read)
      );
 
   // data mux to pick fill word for sending in command/response data beat
   logic [fill_width_p-1:0] dirty_data_selected;
   bsg_mux
-    #(.width_p(fill_width_p)
-      ,.els_p(block_size_in_fill_lp))
-    dirty_data_mux
-     (.data_i(dirty_data_r)
-      ,.sel_i(wrap_cnt)
-      ,.data_o(dirty_data_selected)
-      );
+   #(.width_p(fill_width_p), .els_p(block_size_in_fill_lp))
+   dirty_data_mux
+    (.data_i(dirty_data_r)
+     ,.sel_i(wrap_cnt)
+     ,.data_o(dirty_data_selected)
+     );
 
   bp_cache_tag_info_s dirty_tag_r;
-  logic dirty_tag_v_r;
   wire dirty_tag_read = tag_mem_pkt_yumi_i & (tag_mem_pkt_cast_o.opcode == e_cache_tag_mem_read);
-  wire tag_mem_clk = (tag_mem_invert_clk_p ? ~clk_i : clk_i);
   bsg_dff_sync_read
-   #(.width_p($bits(bp_cache_tag_info_s)))
+   #(.width_p($bits(bp_cache_tag_info_s)), .bypass_p(1))
    dirty_tag_reg
-    (.clk_i(tag_mem_clk)
+    (.clk_i(clk_i)
      ,.reset_i(reset_i)
 
      ,.data_i(tag_mem_i)
      ,.v_n_i(dirty_tag_read)
 
      ,.data_o(dirty_tag_r)
-     ,.v_o(dirty_tag_v_r)
-     ,.yumi_i(dirty_tag_read)
      );
 
   bp_cache_stat_info_s dirty_stat_r;
-  logic dirty_stat_v_r;
   wire dirty_stat_read = stat_mem_pkt_yumi_i & (stat_mem_pkt_cast_o.opcode == e_cache_stat_mem_read);
-  wire stat_mem_clk = (stat_mem_invert_clk_p ? ~clk_i : clk_i);
   bsg_dff_sync_read
-   #(.width_p($bits(bp_cache_stat_info_s)))
+   #(.width_p($bits(bp_cache_stat_info_s)), .bypass_p(1))
    dirty_stat_reg
-    (.clk_i(stat_mem_clk)
+    (.clk_i(clk_i)
      ,.reset_i(reset_i)
 
      ,.data_i(stat_mem_i)
      ,.v_n_i(dirty_stat_read)
 
      ,.data_o(dirty_stat_r)
-     ,.v_o(dirty_stat_v_r)
-     ,.yumi_i(dirty_stat_read)
      );
 
   // common fields from LCE Command used in many states for responses or pkt fields
@@ -770,13 +752,12 @@ module bp_lce_cmd
       end // e_tr
 
       // Transfer Data to target LCE
-      // dirty_data_r holds valid data when dirty_data_v_r is high
       // three commands enter this state: tr, st_tr, and st_tr_wb
       e_tr_data: begin
 
         lce_fill_data_o = dirty_data_selected;
         lce_fill_last_o = is_last_cnt;
-        lce_fill_data_v_o = dirty_data_v_r;
+        lce_fill_data_v_o = 1'b1;
 
         // hold wraparound counter size input constant
         wrap_cnt_size = fill_select_width_lp'(block_size_in_fill_lp-1);
@@ -837,8 +818,7 @@ module bp_lce_cmd
         lce_resp_header_cast_o.size = (lce_resp_has_data_o)
                                       ? cmd_block_size_lp
                                       : e_bedrock_msg_size_1;
-        // send if stat read is valid
-        lce_resp_header_v_o = dirty_stat_v_r;
+        lce_resp_header_v_o = 1'b1;
 
         // dequeue command only if sending null writeback
         lce_cmd_header_yumi_lo = lce_resp_header_v_o & lce_resp_header_ready_and_i
@@ -883,7 +863,7 @@ module bp_lce_cmd
 
         lce_resp_data_o = dirty_data_selected;
         lce_resp_last_o = is_last_cnt;
-        lce_resp_data_v_o = dirty_data_v_r;
+        lce_resp_data_v_o = 1'b1;
 
         // hold wraparound counter size input constant
         wrap_cnt_size = fill_select_width_lp'(block_size_in_fill_lp-1);

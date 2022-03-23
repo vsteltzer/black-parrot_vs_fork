@@ -29,12 +29,6 @@ module bp_lce
    , parameter fill_buffer_els_p = 2
    , parameter fill_data_buffer_els_p = 2
 
-   // clocking options
-   , parameter req_invert_clk_p = 0
-   , parameter data_mem_invert_clk_p = 0
-   , parameter tag_mem_invert_clk_p = 0
-   , parameter stat_mem_invert_clk_p = 0
-
    // LCE-cache interface timeout in cycles
    , parameter timeout_max_limit_p=4
    // maximum number of outstanding transactions
@@ -152,9 +146,8 @@ module bp_lce
   // LCE only supports single data beat for requests
   if (fill_width_p < dword_width_gp)
     $error("fill width must be greater or equal than cache request data width");
-  // Request metadata latency must be 0 or 1
-  if ((metadata_latency_p < 0) || (metadata_latency_p > 1))
-    $error("Cache request metadata latency must be 0 or 1");
+  if ((metadata_latency_p > 1))
+    $error("metadata needs to arrive <2 cycles after the request");
   if (cmd_buffer_els_p < 1 || fill_buffer_els_p < 1)
     $error("LCEs require buffers for at least 1 command and fill header");
   if (cmd_data_buffer_els_p < 1 || fill_data_buffer_els_p < 1)
@@ -315,9 +308,6 @@ module bp_lce
       ,.sets_p(sets_p)
       ,.block_width_p(block_width_p)
       ,.fill_width_p(fill_width_p)
-      ,.data_mem_invert_clk_p(data_mem_invert_clk_p)
-      ,.tag_mem_invert_clk_p(tag_mem_invert_clk_p)
-      ,.stat_mem_invert_clk_p(stat_mem_invert_clk_p)
       ,.cmd_buffer_els_p(cmd_buffer_els_p)
       ,.cmd_data_buffer_els_p(cmd_data_buffer_els_p)
       )

@@ -6,7 +6,6 @@
 `include "bp_pce_l15_if.svh"
 
 module bp_piton_top
- import bsg_wormhole_router_pkg::*;
  import bp_common_pkg::*;
  import bp_fe_pkg::*;
  import bp_be_pkg::*;
@@ -14,10 +13,8 @@ module bp_piton_top
  import bsg_noc_pkg::*;
  #(parameter bp_params_e bp_params_p = e_bp_unicore_parrotpiton_cfg // Warning: Change this at your own peril!
    `declare_bp_proc_params(bp_params_p)
-   `declare_bp_bedrock_mem_if_widths(paddr_width_p, icache_fill_width_p, lce_id_width_p, lce_assoc_p, pce)
+   `declare_bp_bedrock_mem_if_widths(paddr_width_p, did_width_p, lce_id_width_p, lce_assoc_p)
    `declare_bp_pce_l15_if_widths(paddr_width_p, dword_width_gp)
-
-   , localparam cce_instr_ram_addr_width_lp = `BSG_SAFE_CLOG2(num_cce_instr_ram_els_p)
    )
   (input                                               clk_i
    , input                                             reset_i
@@ -26,15 +23,16 @@ module bp_piton_top
 
    , input                                             timer_irq_i
    , input                                             software_irq_i
-   , input                                             external_irq_i
+   , input                                             m_external_irq_i
+   , input                                             s_external_irq_i
 
    // Transducer -> L1.5
    , output logic [4:0]                                transducer_l15_rqtype
    , output logic                                      transducer_l15_nc
    , output logic [2:0]                                transducer_l15_size
    , output logic                                      transducer_l15_val
-   , output logic [paddr_width_p-1:0]                  transducer_l15_address
-   , output logic [dword_width_gp-1:0]                 transducer_l15_data
+   , output logic [39:0]                               transducer_l15_address
+   , output logic [63:0]                               transducer_l15_data
    , output logic [1:0]                                transducer_l15_l1rplway
    , output logic                                      transducer_l15_threadid
    , output logic [3:0]                                transducer_l15_amo_op
@@ -42,17 +40,17 @@ module bp_piton_top
    , output logic                                      transducer_l15_invalidate_cacheline
    , output logic                                      transducer_l15_blockstore
    , output logic                                      transducer_l15_blockinitstore
-   , output logic [dword_width_gp-1:0]                 transducer_l15_data_next_entry
+   , output logic [63:0]                               transducer_l15_data_next_entry
    , output logic [32:0]                               transducer_l15_csm_data
    , input                                             l15_transducer_ack
    
    // L1.5 -> Transducer
    , input                                             l15_transducer_val
    , input [3:0]                                       l15_transducer_returntype
-   , input [dword_width_gp-1:0]                        l15_transducer_data_0
-   , input [dword_width_gp-1:0]                        l15_transducer_data_1
-   , input [dword_width_gp-1:0]                        l15_transducer_data_2
-   , input [dword_width_gp-1:0]                        l15_transducer_data_3
+   , input [63:0]                                      l15_transducer_data_0
+   , input [63:0]                                      l15_transducer_data_1
+   , input [63:0]                                      l15_transducer_data_2
+   , input [63:0]                                      l15_transducer_data_3
    , input                                             l15_transducer_noncacheable
    , input                                             l15_transducer_atomic
    , input                                             l15_transducer_threadid 
@@ -120,10 +118,18 @@ module bp_piton_top
   logic cfg_resp_v_lo, cfg_resp_yumi_li;
 
   bp_cfg_bus_s cfg_bus_lo;
-  logic [dword_width_gp-1:0] cfg_irf_data_li;
-  logic [vaddr_width_p-1:0]  cfg_npc_data_li;
-  logic [dword_width_gp-1:0] cfg_csr_data_li;
-  logic [1:0]                cfg_priv_data_li;
+  assign cfg_bus_lo =
+    '{freeze      : '0
+      ,core_id    : '0
+      ,icache_id  : '0
+      ,dcache_id  : 1'b1
+      ,hio_mask   : '1
+      // Unused by openpiton
+      ,cce_id     : '0
+      ,cce_mode   : e_cce_mode_uncached
+      ,icache_mode: e_lce_mode_normal
+      ,dcache_mode: e_lce_mode_normal
+      };
 
   bp_fe_queue_s fe_queue_li;
   logic fe_queue_v_li, fe_queue_ready_lo;
@@ -221,19 +227,20 @@ module bp_piton_top
 
      ,.timer_irq_i(timer_irq_i)
      ,.software_irq_i(software_irq_i)
-     ,.external_irq_i(external_irq_i)
+     ,.m_external_irq_i(m_external_irq_i)
+     ,.s_external_irq_i(s_external_irq_i)
      );
 
   bp_pce
-    #(.bp_params_p(bp_params_p)
-     ,.assoc_p(dcache_assoc_p)
-     ,.sets_p(dcache_sets_p)
-     ,.block_width_p(dcache_block_width_p)
-     ,.fill_width_p(dcache_fill_width_p)
-     ,.pce_id_p(1)
-     )
-    dcache_pce
-    (.clk_i(clk_i)
+   #(.bp_params_p(bp_params_p)
+    ,.assoc_p(dcache_assoc_p)
+    ,.sets_p(dcache_sets_p)
+    ,.block_width_p(dcache_block_width_p)
+    ,.fill_width_p(dcache_fill_width_p)
+    ,.pce_id_p(1)
+    )
+   dcache_pce
+   (.clk_i(clk_i)
     ,.reset_i(reset_i)
 
     ,.cache_req_i(dcache_req_lo)
@@ -270,15 +277,15 @@ module bp_piton_top
     );
 
   bp_pce
-    #(.bp_params_p(bp_params_p)
-     ,.assoc_p(icache_assoc_p)
-     ,.sets_p(icache_sets_p)
-     ,.block_width_p(icache_block_width_p)
-     ,.fill_width_p(icache_fill_width_p)
-     ,.pce_id_p(0)
-     )
-    icache_pce
-    (.clk_i(clk_i)
+   #(.bp_params_p(bp_params_p)
+    ,.assoc_p(icache_assoc_p)
+    ,.sets_p(icache_sets_p)
+    ,.block_width_p(icache_block_width_p)
+    ,.fill_width_p(icache_fill_width_p)
+    ,.pce_id_p(0)
+    )
+   icache_pce
+   (.clk_i(clk_i)
     ,.reset_i(reset_i)
 
     ,.cache_req_i(icache_req_lo)
@@ -314,79 +321,15 @@ module bp_piton_top
     ,.l15_pce_ret_yumi_o(l15_pce_ret_yumi_lo[0])
     );
 
-  logic cfg_resp_ready_li;
-  assign cfg_resp_yumi_li = cfg_resp_v_lo & cfg_resp_ready_li;
-  bp_cce_mmio_cfg_loader
-    #(.bp_params_p(bp_params_p)
-     ,.inst_width_p($bits(bp_cce_inst_s))
-     ,.inst_ram_addr_width_p(cce_instr_ram_addr_width_lp)
-     ,.inst_ram_els_p(num_cce_instr_ram_els_p)
-     ,.skip_ram_init_p(0)
-     ,.clear_freeze_p(1)
-     // Enabling all domains for parrotpiton
-     ,.hio_mask_p(64'hff)
-     )
-     cfg_loader
-     (.clk_i(clk_i)
-     ,.reset_i(reset_i)
-
-     ,.lce_id_i('0)
-
-     ,.io_cmd_header_o(cfg_cmd_header_li)
-     ,.io_cmd_data_o(cfg_cmd_data_li)
-     ,.io_cmd_v_o(cfg_cmd_v_li)
-     ,.io_cmd_last_o(cfg_cmd_last_li)
-     ,.io_cmd_yumi_i(cfg_cmd_v_li & cfg_cmd_ready_lo)
-
-     ,.io_resp_header_i(cfg_resp_header_lo)
-     ,.io_resp_data_i(cfg_resp_data_lo)
-     ,.io_resp_v_i(cfg_resp_v_lo)
-     ,.io_resp_last_i(cfg_resp_last_lo)
-     ,.io_resp_ready_and_o(cfg_resp_ready_li)
-
-     ,.done_o()
-     );
-
-  bp_me_cfg
-   #(.bp_params_p(bp_params_p))
-   cfg
-    (.clk_i(clk_i)
-     ,.reset_i(reset_i)
-
-     ,.mem_cmd_header_i(cfg_cmd_header_li)
-     ,.mem_cmd_data_i(cfg_cmd_data_li)
-     ,.mem_cmd_v_i(cfg_cmd_v_li)
-     ,.mem_cmd_last_i(cfg_cmd_last_li)
-     ,.mem_cmd_ready_and_o(cfg_cmd_ready_lo)
-
-     ,.mem_resp_header_o(cfg_resp_header_lo)
-     ,.mem_resp_data_o(cfg_resp_data_lo)
-     ,.mem_resp_v_o(cfg_resp_v_lo)
-     ,.mem_resp_last_o(cfg_resp_last_lo)
-     ,.mem_resp_ready_and_i(cfg_resp_yumi_li)
-
-     ,.cfg_bus_o(cfg_bus_lo)
-     ,.did_i('0)
-     ,.host_did_i('0)
-     ,.cord_i({coh_noc_y_cord_width_p'(config_coreid_y), coh_noc_x_cord_width_p'(config_coreid_x)})
-
-     ,.cce_ucode_v_o()
-     ,.cce_ucode_w_o()
-     ,.cce_ucode_addr_o()
-     ,.cce_ucode_data_o()
-     ,.cce_ucode_data_i('0)
-     );
-
   // PCE -> L1.5 - Arbitration logic
   bp_pce_l15_req_s [1:0] fifo_lo;
   logic [1:0] fifo_v_lo, fifo_yumi_li;
   
+  // Do we need this buffer? Round robin?
   for (genvar i = 0; i < 2; i++)
     begin : fifo
       bsg_fifo_1r1w_small
-       #(.width_p($bits(bp_pce_l15_req_s))
-         ,.els_p(4)
-         )
+       #(.width_p($bits(bp_pce_l15_req_s)), .els_p(4))
        mem_fifo
         (.clk_i(clk_i)
          ,.reset_i(reset_i)
@@ -446,9 +389,7 @@ module bp_piton_top
   bp_l15_pce_ret_s l15_fifo_li, fifo_pce_lo;
 
   bsg_fifo_1r1w_small
-  #(.width_p($bits(bp_l15_pce_ret_s))
-    ,.els_p(16)
-    )
+  #(.width_p($bits(bp_l15_pce_ret_s)), .els_p(16))
   resp_fifo
     (.clk_i(clk_i)
     ,.reset_i(reset_i)

@@ -59,15 +59,21 @@ module bp_uce
     , input [cache_stat_info_width_lp-1:0]           stat_mem_i
 
     , output logic [mem_header_width_lp-1:0]         mem_cmd_header_o
+    , output logic                                   mem_cmd_header_v_o
+    , input                                          mem_cmd_header_ready_and_i
+    , output logic                                   mem_cmd_has_data_o
     , output logic [mem_data_width_p-1:0]            mem_cmd_data_o
-    , output logic                                   mem_cmd_v_o
-    , input                                          mem_cmd_ready_and_i
+    , output logic                                   mem_cmd_data_v_o
+    , input                                          mem_cmd_data_ready_and_i
     , output logic                                   mem_cmd_last_o
 
     , input [mem_header_width_lp-1:0]                mem_resp_header_i
+    , input                                          mem_resp_header_v_i
+    , output logic                                   mem_resp_header_ready_and_o
+    , input                                          mem_resp_has_data_i
     , input [mem_data_width_p-1:0]                   mem_resp_data_i
-    , input                                          mem_resp_v_i
-    , output logic                                   mem_resp_ready_and_o
+    , input                                          mem_resp_data_v_i
+    , output logic                                   mem_resp_data_ready_and_o
     , input                                          mem_resp_last_i
     );
 
@@ -239,10 +245,13 @@ module bp_uce
      ,.reset_i(reset_i)
 
      ,.msg_header_o(mem_cmd_header_o)
+     ,.msg_header_v_o(mem_cmd_header_v_o)
+     ,.msg_header_ready_and_i(mem_cmd_header_ready_and_i)
+     ,.msg_has_data_o(mem_cmd_has_data_o)
      ,.msg_data_o(mem_cmd_data_o)
-     ,.msg_v_o(mem_cmd_v_o)
+     ,.msg_data_v_o(mem_cmd_data_v_o)
+     ,.msg_data_ready_and_i(mem_cmd_data_ready_and_i)
      ,.msg_last_o(mem_cmd_last_o)
-     ,.msg_ready_and_i(mem_cmd_ready_and_i)
 
      ,.fsm_base_header_i(fsm_cmd_header_lo)
      ,.fsm_data_i(fsm_cmd_data_lo)
@@ -274,10 +283,13 @@ module bp_uce
      ,.reset_i(reset_i)
 
      ,.msg_header_i(mem_resp_header_i)
+     ,.msg_header_v_i(mem_resp_header_v_i)
+     ,.msg_header_ready_and_o(mem_resp_header_ready_and_o)
+     ,.msg_has_data_i(mem_resp_last_i)
      ,.msg_data_i(mem_resp_data_i)
-     ,.msg_v_i(mem_resp_v_i)
+     ,.msg_data_v_i(mem_resp_data_v_i)
+     ,.msg_data_ready_and_o(mem_resp_data_ready_and_o)
      ,.msg_last_i(mem_resp_last_i)
-     ,.msg_ready_and_o(mem_resp_ready_and_o)
 
      ,.fsm_base_header_o(fsm_resp_header_li)
      ,.fsm_addr_o(fsm_resp_addr_li)

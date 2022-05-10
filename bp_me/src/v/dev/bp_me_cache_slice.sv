@@ -28,15 +28,21 @@ module bp_me_cache_slice
    , input                                               reset_i
 
    , input  [mem_header_width_lp-1:0]                    mem_cmd_header_i
+   , input                                               mem_cmd_header_v_i
+   , output logic                                        mem_cmd_header_ready_and_o
+   , input                                               mem_cmd_has_data_i
    , input  [l2_data_width_p-1:0]                        mem_cmd_data_i
-   , input                                               mem_cmd_v_i
-   , output logic                                        mem_cmd_ready_and_o
+   , input                                               mem_cmd_data_v_i
+   , output logic                                        mem_cmd_data_ready_and_o
    , input                                               mem_cmd_last_i
 
    , output logic [mem_header_width_lp-1:0]              mem_resp_header_o
+   , output logic                                        mem_resp_header_v_o
+   , input                                               mem_resp_header_ready_and_i
+   , output logic                                        mem_resp_has_data_o
    , output logic [l2_data_width_p-1:0]                  mem_resp_data_o
-   , output logic                                        mem_resp_v_o
-   , input                                               mem_resp_ready_and_i
+   , output logic                                        mem_resp_data_v_o
+   , input                                               mem_resp_data_ready_and_i
    , output logic                                        mem_resp_last_o
 
    // DRAM interface
@@ -69,15 +75,21 @@ module bp_me_cache_slice
      ,.reset_i(reset_i)
 
      ,.mem_cmd_header_i(mem_cmd_header_i)
+     ,.mem_cmd_header_v_i(mem_cmd_header_v_i)
+     ,.mem_cmd_header_ready_and_o(mem_cmd_header_ready_and_o)
+     ,.mem_cmd_has_data_i(mem_cmd_has_data_i)
      ,.mem_cmd_data_i(mem_cmd_data_i)
-     ,.mem_cmd_v_i(mem_cmd_v_i)
-     ,.mem_cmd_ready_and_o(mem_cmd_ready_and_o)
+     ,.mem_cmd_data_v_i(mem_cmd_data_v_i)
+     ,.mem_cmd_data_ready_and_o(mem_cmd_data_ready_and_o)
      ,.mem_cmd_last_i(mem_cmd_last_i)
 
      ,.mem_resp_header_o(mem_resp_header_o)
+     ,.mem_resp_header_v_o(mem_resp_header_v_o)
+     ,.mem_resp_header_ready_and_i(mem_resp_header_ready_and_i)
+     ,.mem_resp_has_data_o(mem_resp_has_data_o)
      ,.mem_resp_data_o(mem_resp_data_o)
-     ,.mem_resp_v_o(mem_resp_v_o)
-     ,.mem_resp_ready_and_i(mem_resp_ready_and_i)
+     ,.mem_resp_data_v_o(mem_resp_data_v_o)
+     ,.mem_resp_data_ready_and_i(mem_resp_data_ready_and_i)
      ,.mem_resp_last_o(mem_resp_last_o)
 
      ,.cache_pkt_o(cache_pkt_li)

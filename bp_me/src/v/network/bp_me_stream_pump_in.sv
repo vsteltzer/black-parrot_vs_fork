@@ -59,10 +59,13 @@ module bp_me_stream_pump_in
 
    // Input BedRock Stream
    , input [xce_header_width_lp-1:0]                msg_header_i
+   , input                                          msg_header_v_i
+   , output logic                                   msg_header_ready_and_o
+   , input                                          msg_has_data_i
    , input [stream_data_width_p-1:0]                msg_data_i
-   , input                                          msg_v_i
+   , input                                          msg_data_v_i
+   , output logic                                   msg_data_ready_and_o
    , input                                          msg_last_i
-   , output logic                                   msg_ready_and_o
 
    // FSM consumer side
    , output logic [xce_header_width_lp-1:0]         fsm_base_header_o

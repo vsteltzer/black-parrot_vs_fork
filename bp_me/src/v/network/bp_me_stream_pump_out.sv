@@ -52,10 +52,13 @@ module bp_me_stream_pump_out
 
    // Output BedRock Stream
    , output logic [xce_header_width_lp-1:0]         msg_header_o
+   , output logic                                   msg_header_v_o
+   , input                                          msg_header_ready_and_i
+   , output logic                                   msg_has_data_o
    , output logic [stream_data_width_p-1:0]         msg_data_o
-   , output logic                                   msg_v_o
+   , output logic                                   msg_data_v_o
+   , input                                          msg_data_ready_and_i
    , output logic                                   msg_last_o
-   , input                                          msg_ready_and_i
 
    // FSM producer side
    // FSM must hold fsm_base_header_i constant throughout the transaction

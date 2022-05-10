@@ -23,15 +23,21 @@ module bp_me_cfg_slice
    , input                                          reset_i
 
    , input [mem_header_width_lp-1:0]                mem_cmd_header_i
+   , input                                          mem_cmd_header_v_i
+   , output logic                                   mem_cmd_header_ready_and_o
+   , input                                          mem_cmd_has_data_i
    , input [dword_width_gp-1:0]                     mem_cmd_data_i
-   , input                                          mem_cmd_v_i
-   , output logic                                   mem_cmd_ready_and_o
+   , input                                          mem_cmd_data_v_i
+   , output logic                                   mem_cmd_data_ready_and_o
    , input                                          mem_cmd_last_i
 
    , output logic [mem_header_width_lp-1:0]         mem_resp_header_o
+   , output logic                                   mem_resp_header_v_o
+   , input                                          mem_resp_header_ready_and_i
+   , output logic                                   mem_resp_has_data_o
    , output logic [dword_width_gp-1:0]              mem_resp_data_o
-   , output logic                                   mem_resp_v_o
-   , input                                          mem_resp_ready_and_i
+   , output logic                                   mem_resp_data_v_o
+   , input                                          mem_resp_data_ready_and_i
    , output logic                                   mem_resp_last_o
 
    , output logic [cfg_bus_width_lp-1:0]            cfg_bus_o

@@ -25,28 +25,40 @@ module bp_unicore_complex
 
    // Outgoing I/O
    , output logic [num_core_p-1:0][mem_header_width_lp-1:0]         io_cmd_header_o
+   , output logic [num_core_p-1:0]                                  io_cmd_header_v_o
+   , input [num_core_p-1:0]                                         io_cmd_header_ready_and_i
+   , output logic [num_core_p-1:0]                                  io_cmd_has_data_o
    , output logic [num_core_p-1:0][uce_fill_width_p-1:0]            io_cmd_data_o
-   , output logic [num_core_p-1:0]                                  io_cmd_v_o
-   , input [num_core_p-1:0]                                         io_cmd_ready_and_i
+   , output logic [num_core_p-1:0]                                  io_cmd_data_v_o
+   , input [num_core_p-1:0]                                         io_cmd_data_ready_and_i
    , output logic [num_core_p-1:0]                                  io_cmd_last_o
 
    , input [num_core_p-1:0][mem_header_width_lp-1:0]                io_resp_header_i
+   , input [num_core_p-1:0]                                         io_resp_header_v_i
+   , output logic [num_core_p-1:0]                                  io_resp_header_ready_and_o
+   , input [num_core_p-1:0]                                         io_resp_has_data_i
    , input [num_core_p-1:0][uce_fill_width_p-1:0]                   io_resp_data_i
-   , input [num_core_p-1:0]                                         io_resp_v_i
-   , output logic [num_core_p-1:0]                                  io_resp_ready_and_o
+   , input [num_core_p-1:0]                                         io_resp_data_v_i
+   , output logic [num_core_p-1:0]                                  io_resp_data_ready_and_o
    , input [num_core_p-1:0]                                         io_resp_last_i
 
    // Incoming I/O
    , input [num_core_p-1:0][mem_header_width_lp-1:0]                io_cmd_header_i
+   , input [num_core_p-1:0]                                         io_cmd_header_v_i
+   , output logic [num_core_p-1:0]                                  io_cmd_header_ready_and_o
+   , input [num_core_p-1:0]                                         io_cmd_has_data_i
    , input [num_core_p-1:0][uce_fill_width_p-1:0]                   io_cmd_data_i
-   , input [num_core_p-1:0]                                         io_cmd_v_i
-   , output logic [num_core_p-1:0]                                  io_cmd_ready_and_o
+   , input [num_core_p-1:0]                                         io_cmd_data_v_i
+   , output logic [num_core_p-1:0]                                  io_cmd_data_ready_and_o
    , input [num_core_p-1:0]                                         io_cmd_last_i
 
    , output logic [num_core_p-1:0][mem_header_width_lp-1:0]         io_resp_header_o
+   , output logic [num_core_p-1:0]                                  io_resp_header_v_o
+   , input [num_core_p-1:0]                                         io_resp_header_ready_and_i
+   , output logic [num_core_p-1:0]                                  io_resp_has_data_o
    , output logic [num_core_p-1:0][uce_fill_width_p-1:0]            io_resp_data_o
-   , output logic [num_core_p-1:0]                                  io_resp_v_o
-   , input [num_core_p-1:0]                                         io_resp_ready_and_i
+   , output logic [num_core_p-1:0]                                  io_resp_data_v_o
+   , input [num_core_p-1:0]                                         io_resp_data_ready_and_i
    , output logic [num_core_p-1:0]                                  io_resp_last_o
 
    // DRAM interface
@@ -83,27 +95,39 @@ module bp_unicore_complex
          ,.my_cord_i(cord_li)
 
          ,.io_cmd_header_o(io_cmd_header_o[i])
+         ,.io_cmd_header_v_o(io_cmd_header_v_o[i])
+         ,.io_cmd_header_ready_and_i(io_cmd_header_ready_and_i[i])
+         ,.io_cmd_has_data_o(io_cmd_has_data_o[i])
          ,.io_cmd_data_o(io_cmd_data_o[i])
-         ,.io_cmd_v_o(io_cmd_v_o[i])
-         ,.io_cmd_ready_and_i(io_cmd_ready_and_i[i])
+         ,.io_cmd_data_v_o(io_cmd_data_v_o[i])
+         ,.io_cmd_data_ready_and_i(io_cmd_data_ready_and_i[i])
          ,.io_cmd_last_o(io_cmd_last_o[i])
 
          ,.io_resp_header_i(io_resp_header_i[i])
+         ,.io_resp_header_v_i(io_resp_header_v_i[i])
+         ,.io_resp_header_ready_and_o(io_resp_header_ready_and_o[i])
+         ,.io_resp_has_data_i(io_resp_has_data_i[i])
          ,.io_resp_data_i(io_resp_data_i[i])
-         ,.io_resp_v_i(io_resp_v_i[i])
-         ,.io_resp_ready_and_o(io_resp_ready_and_o[i])
+         ,.io_resp_data_v_i(io_resp_data_v_i[i])
+         ,.io_resp_data_ready_and_o(io_resp_data_ready_and_o[i])
          ,.io_resp_last_i(io_resp_last_i[i])
 
          ,.io_cmd_header_i(io_cmd_header_i[i])
+         ,.io_cmd_header_v_i(io_cmd_header_v_i[i])
+         ,.io_cmd_header_ready_and_o(io_cmd_header_ready_and_o[i])
+         ,.io_cmd_has_data_i(io_cmd_has_data_i[i])
          ,.io_cmd_data_i(io_cmd_data_i[i])
-         ,.io_cmd_v_i(io_cmd_v_i[i])
-         ,.io_cmd_ready_and_o(io_cmd_ready_and_o[i])
+         ,.io_cmd_data_v_i(io_cmd_data_v_i[i])
+         ,.io_cmd_data_ready_and_o(io_cmd_data_ready_and_o[i])
          ,.io_cmd_last_i(io_cmd_last_i[i])
 
          ,.io_resp_header_o(io_resp_header_o[i])
+         ,.io_resp_header_v_o(io_resp_header_v_o[i])
+         ,.io_resp_header_ready_and_i(io_resp_header_ready_and_i[i])
+         ,.io_resp_has_data_o(io_resp_has_data_o[i])
          ,.io_resp_data_o(io_resp_data_o[i])
-         ,.io_resp_v_o(io_resp_v_o[i])
-         ,.io_resp_ready_and_i(io_resp_ready_and_i[i])
+         ,.io_resp_data_v_o(io_resp_data_v_o[i])
+         ,.io_resp_data_ready_and_i(io_resp_data_ready_and_i[i])
          ,.io_resp_last_o(io_resp_last_o[i])
 
          ,.dma_pkt_o(dma_pkt_o[i])
